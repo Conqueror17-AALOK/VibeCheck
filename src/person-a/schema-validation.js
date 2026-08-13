@@ -2,24 +2,50 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const schemaPath = path.resolve(__dirname, 'schema.json');
-const dataPath = path.resolve(__dirname, 'example-extraction.json');
+export class ExtractionValidator {
+  constructor(schemaPath) {
+    const targetSchemaPath = schemaPath || path.resolve(__dirname, 'schema.json');
+    const schemaContent = fs.readFileSync(targetSchemaPath, 'utf8');
+    this.schema = JSON.parse(schemaContent);
 
-const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
-const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    this.ajv = new Ajv({ allErrors: true, strict: false });
+    if (typeof addFormats === 'function') {
+      addFormats(this.ajv);
+    } else if (addFormats && addFormats.default) {
+      addFormats.default(this.ajv);
+    }
+    this.validateFn = this.ajv.compile(this.schema);
+  }
 
-const ajv = new Ajv({ allErrors: true, strict: false });
-const validate = ajv.compile(schema);
-const valid = validate(data);
+  validate(data) {
+    const valid = this.validateFn(data);
+    if (!valid) {
+      const errors = (this.validateFn.errors || []).map(
+        (err) => `${err.instancePath || '(root)'} ${err.message || 'invalid'}`.trim()
+      );
+      return { valid: false, errors };
+    }
+    return { valid: true, errors: [] };
+  }
+}
 
-if (!valid) {
-  console.error('Schema validation failed:');
-  console.error(validate.errors);
-  process.exit(1);
-} else {
-  console.log('Schema validation successful!');
+// CLI runner if executed directly
+if (process.argv[1] && process.argv[1].endsWith('schema-validation.js')) {
+  const dataPath = path.resolve(__dirname, 'example-extraction.json');
+  const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  const validator = new ExtractionValidator();
+  const result = validator.validate(data);
+
+  if (!result.valid) {
+    console.error('Schema validation failed:');
+    console.error(result.errors);
+    process.exit(1);
+  } else {
+    console.log('Schema validation successful!');
+  }
 }
