@@ -8,3 +8,14 @@ services:
     envVars:
       - key: PORT
         value: 3000
+
+  - type: web
+    name: vibecheck-render-service
+    env: docker
+    dockerfilePath: ./Dockerfile.render-service
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 3000
+
