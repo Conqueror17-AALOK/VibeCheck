@@ -16,8 +16,9 @@ RUN npm ci
 # Copy full source tree & configuration files
 COPY . .
 
-# Build shared package
+# Build shared package and person-a service
 RUN npm run build --workspace=src/shared
+RUN npm run build --workspace=src/person-a
 
 # Production Runner stage
 FROM node:18-slim AS runner
