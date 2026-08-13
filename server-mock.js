@@ -1,6 +1,3 @@
-"scripts": {
-  "start": "node server-mock.js"
-}
 
 const express = require('express');
 const cors = require('cors');
