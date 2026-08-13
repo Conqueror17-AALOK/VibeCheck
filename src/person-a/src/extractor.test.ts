@@ -1,52 +1,148 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { extractElementsFromPage } from "./extractor.js";
-import { validateVibeCheckData } from "@vibecheck/shared";
+import { extractElementsFromPage, rgbToHex } from "./extractor.js";
+// @ts-ignore
+import { ExtractionValidator } from "../schema-validation.js";
 
-describe("extractElementsFromPage", () => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const validator = new ExtractionValidator(path.resolve(__dirname, "../schema.json"));
+
+describe("rgbToHex helper", () => {
+  it("handles standard rgb string", () => {
+    expect(rgbToHex("rgb(255, 0, 128)")).toBe("#FF0080");
+  });
+
+  it("handles rgba string with alpha = 1", () => {
+    expect(rgbToHex("rgba(0, 102, 255, 1)")).toBe("#0066FF");
+  });
+
+  it("handles rgba string with alpha = 0 as transparent", () => {
+    expect(rgbToHex("rgba(0, 0, 0, 0)")).toBe("transparent");
+  });
+
+  it("handles transparent and empty input", () => {
+    expect(rgbToHex("transparent")).toBe("transparent");
+    expect(rgbToHex("none")).toBe("transparent");
+    expect(rgbToHex("")).toBe("transparent");
+  });
+});
+
+describe("extractElementsFromPage edge cases", () => {
   it(
-    "extracts structured elements from HTML and validates against schema",
+    "handles display:none, visibility:hidden, off-screen elements, and semantic types",
     async () => {
-      const sampleHtml = `
+      const html = `
         <!DOCTYPE html>
         <html>
-          <head><title>Test Page</title></head>
-          <body style="margin: 0; padding: 20px; font-family: sans-serif;">
-            <h1 id="main_heading" style="color: #111827; font-size: 24px;">Welcome</h1>
-            <form style="margin-top: 20px;">
-              <input type="text" id="username" placeholder="Enter Username" style="padding: 10px; width: 200px; font-size: 14px;" />
-              <button type="submit" id="submit_btn" style="background-color: #2563eb; color: #ffffff; padding: 10px 20px; border-radius: 4px;">Submit</button>
-            </form>
+          <head>
+            <style>
+              .hidden-display { display: none; }
+              .hidden-vis { visibility: hidden; }
+              .offscreen { position: absolute; left: -9999px; top: -9999px; width: 100px; height: 30px; }
+              .custom-btn { padding: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="hidden-display" id="disp_none">Should be skipped completely</div>
+            <div class="hidden-vis" id="vis_hidden">Hidden element</div>
+            <div class="offscreen" id="off_screen">Off screen element</div>
+            <div class="custom-btn" role="button" id="aria_btn">Click Me</div>
           </body>
         </html>
       `;
 
       const result = await extractElementsFromPage({
-        html: sampleHtml,
-        viewport: { width: 800, height: 600 },
+        html,
+        viewport: { width: 1280, height: 800 },
       });
 
-      expect(result).toBeDefined();
-      expect(result.elements.length).toBeGreaterThan(0);
+      // 1. display:none should be skipped completely
+      const dispNoneEl = result.elements.find((el: any) => el.id === "disp_none");
+      expect(dispNoneEl).toBeUndefined();
 
-      const heading = result.elements.find((el) => el.id === "main_heading");
-      expect(heading).toBeDefined();
-      expect(heading?.type).toBe("heading");
-      expect(heading?.text).toBe("Welcome");
+      // 2. visibility:hidden should be included with visibility: 'hidden'
+      const visHiddenEl = result.elements.find((el: any) => el.id === "vis_hidden");
+      expect(visHiddenEl).toBeDefined();
+      expect(visHiddenEl?.visibility).toBe("hidden");
 
-      const input = result.elements.find((el) => el.id === "username");
-      expect(input).toBeDefined();
-      expect(input?.type).toBe("input");
+      // 3. off-screen element should be marked visibility: 'off-screen'
+      const offScreenEl = result.elements.find((el: any) => el.id === "off_screen");
+      expect(offScreenEl).toBeDefined();
+      expect(offScreenEl?.visibility).toBe("off-screen");
 
-      const button = result.elements.find((el) => el.id === "submit_btn");
-      expect(button).toBeDefined();
-      expect(button?.type).toBe("button");
-      expect(button?.text).toBe("Submit");
+      // 4. ARIA button role should be detected as button
+      const ariaBtnEl = result.elements.find((el: any) => el.id === "aria_btn");
+      expect(ariaBtnEl).toBeDefined();
+      expect(ariaBtnEl?.type).toBe("button");
 
-      // Validate overall data structure against schema
-      const validation = validateVibeCheckData(result);
+      // 5. Output must pass schema.json validation
+      const validation = validator.validate(result);
       expect(validation.valid).toBe(true);
       expect(validation.errors).toEqual([]);
     },
-    60000,
+    30000,
+  );
+});
+
+describe("3 Test HTML Samples Extraction", () => {
+  it(
+    "extracts and validates sample 1: login-form.html",
+    async () => {
+      const filePath = path.resolve(__dirname, "../test-samples/login-form.html");
+      const html = fs.readFileSync(filePath, "utf8");
+
+      const result = await extractElementsFromPage({
+        html,
+        viewport: { width: 1280, height: 800 },
+      });
+
+      expect(result.elements.length).toBeGreaterThan(0);
+      const validation = validator.validate(result);
+      expect(validation.valid).toBe(true);
+      expect(validation.errors).toEqual([]);
+    },
+    30000,
+  );
+
+  it(
+    "extracts and validates sample 2: card-grid.html",
+    async () => {
+      const filePath = path.resolve(__dirname, "../test-samples/card-grid.html");
+      const html = fs.readFileSync(filePath, "utf8");
+
+      const result = await extractElementsFromPage({
+        html,
+        viewport: { width: 1280, height: 800 },
+      });
+
+      expect(result.elements.length).toBeGreaterThan(0);
+      const validation = validator.validate(result);
+      expect(validation.valid).toBe(true);
+      expect(validation.errors).toEqual([]);
+    },
+    30000,
+  );
+
+  it(
+    "extracts and validates sample 3: nav-bar.html",
+    async () => {
+      const filePath = path.resolve(__dirname, "../test-samples/nav-bar.html");
+      const html = fs.readFileSync(filePath, "utf8");
+
+      const result = await extractElementsFromPage({
+        html,
+        viewport: { width: 1280, height: 800 },
+      });
+
+      expect(result.elements.length).toBeGreaterThan(0);
+      const validation = validator.validate(result);
+      expect(validation.valid).toBe(true);
+      expect(validation.errors).toEqual([]);
+    },
+    30000,
   );
 });

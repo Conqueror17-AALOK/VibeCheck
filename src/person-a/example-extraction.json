@@ -1,0 +1,83 @@
+{
+  "elements": [
+    {
+      "id": "header_logo",
+      "type": "image",
+      "text": "VibeCheck Logo",
+      "position": {
+        "x": 20,
+        "y": 15,
+        "width": 120,
+        "height": 40
+      },
+      "style": {
+        "opacity": 1
+      },
+      "required": true,
+      "visibility": "visible"
+    },
+    {
+      "id": "search_input",
+      "type": "input",
+      "text": "Search...",
+      "position": {
+        "x": 160,
+        "y": 15,
+        "width": 300,
+        "height": 40
+      },
+      "relative_position": {
+        "right_of": "header_logo",
+        "alignment": "centered"
+      },
+      "style": {
+        "color": "#333333",
+        "background_color": "#ffffff",
+        "font_size": 14,
+        "font_weight": "normal",
+        "border_radius": 4,
+        "padding": "8px 12px",
+        "opacity": 1
+      },
+      "required": true,
+      "visibility": "visible"
+    },
+    {
+      "id": "submit_btn",
+      "type": "button",
+      "text": "Submit",
+      "position": {
+        "x": 470,
+        "y": 15,
+        "width": 90,
+        "height": 40
+      },
+      "relative_position": {
+        "right_of": "search_input",
+        "alignment": "centered"
+      },
+      "style": {
+        "color": "#ffffff",
+        "background_color": "#0066ff",
+        "font_size": 14,
+        "font_weight": "bold",
+        "border_radius": 4,
+        "padding": "8px 16px",
+        "opacity": 1
+      },
+      "required": true,
+      "visibility": "visible"
+    }
+  ],
+  "layout": {
+    "container_alignment": "centered",
+    "total_elements_expected": 3,
+    "viewport_width": 1280,
+    "viewport_height": 800
+  },
+  "metadata": {
+    "source": "extracted",
+    "timestamp": "2026-08-13T05:42:00.000Z",
+    "url": "https://example.com"
+  }
+}
