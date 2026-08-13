@@ -111,11 +111,19 @@ export async function extractElementsFromPage(options: ExtractOptions): Promise<
           .substring(0, 40);
       }
 
+      function getClassNameString(el: Element): string {
+        if (typeof el.className === "string") return el.className;
+        if (el.className && typeof (el.className as any).baseVal === "string") {
+          return (el.className as any).baseVal;
+        }
+        return "";
+      }
+
       function determineElementType(el: Element): ElementType {
         const tag = el.tagName.toLowerCase();
         const role = el.getAttribute("role")?.toLowerCase();
         const typeAttr = el.getAttribute("type")?.toLowerCase();
-        const className = el.className && typeof el.className === "string" ? el.className.toLowerCase() : "";
+        const className = getClassNameString(el).toLowerCase();
 
         // 1. Check ARIA roles first
         if (role === "button") return "button";
@@ -149,9 +157,6 @@ export async function extractElementsFromPage(options: ExtractOptions): Promise<
         if (tag === "svg") return "icon";
         if (tag === "article") return "card";
         if (["p", "span", "b", "strong", "em", "i", "small", "mark"].includes(tag)) return "text";
-        if (["div", "section", "main", "header", "footer", "nav", "form", "aside", "ul", "ol", "li"].includes(tag)) {
-          // If class contains specific semantic terms, give precedence to them below
-        }
 
         // 3. Check Class Name Patterns
         if (className.includes("btn") || className.includes("button") || className.includes("cta")) return "button";
@@ -218,7 +223,7 @@ export async function extractElementsFromPage(options: ExtractOptions): Promise<
 
         const rect = el.getBoundingClientRect();
 
-        // Determine visibility
+        // Determine visibility state
         const isHiddenVisibility = style.visibility === "hidden" || parseFloat(style.opacity) === 0;
         const isOffScreen =
           rect.right < 0 || rect.bottom < 0 || rect.left > window.innerWidth || rect.top > window.innerHeight;
@@ -236,8 +241,9 @@ export async function extractElementsFromPage(options: ExtractOptions): Promise<
         if (rect.width === 0 && rect.height === 0 && visibilityState === "visible") continue;
 
         const type = determineElementType(el);
+        const classNameStr = getClassNameString(el);
         // Skip unstyled, unnamed container divs to keep output clean
-        if (type === "container" && !el.getAttribute("id") && !el.className) continue;
+        if (type === "container" && !el.getAttribute("id") && !classNameStr) continue;
 
         const visibleText = (el.textContent || "").trim();
         const placeholder = el.getAttribute("placeholder") || "";
@@ -255,6 +261,7 @@ export async function extractElementsFromPage(options: ExtractOptions): Promise<
         }
         if (!baseId) baseId = "element";
 
+        // De-duplicate IDs across the entire DOM (handles duplicate explicit HTML ids seamlessly)
         const count = usedIds.get(baseId) || 0;
         usedIds.set(baseId, count + 1);
         const finalId = count === 0 ? baseId : `${baseId}_${count}`;
