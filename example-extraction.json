@@ -1,0 +1,81 @@
+{
+  "elements": [
+    {
+      "id": "header_title",
+      "type": "heading",
+      "text": "Welcome to VibeCheck",
+      "position": {
+        "x": 20,
+        "y": 20,
+        "width": 300,
+        "height": 40
+      },
+      "style": {
+        "color": "#111827",
+        "font_size": 28,
+        "font_weight": "700"
+      },
+      "required": true,
+      "visibility": "visible"
+    },
+    {
+      "id": "email_input",
+      "type": "input",
+      "text": "",
+      "position": {
+        "x": 20,
+        "y": 80,
+        "width": 300,
+        "height": 42
+      },
+      "relative_position": {
+        "below": "header_title",
+        "alignment": "left-aligned"
+      },
+      "style": {
+        "color": "#374151",
+        "background_color": "#ffffff",
+        "font_size": 14,
+        "border_radius": 6,
+        "padding": "10px 12px"
+      },
+      "required": true,
+      "visibility": "visible"
+    },
+    {
+      "id": "submit_button",
+      "type": "button",
+      "text": "Sign In",
+      "position": {
+        "x": 20,
+        "y": 136,
+        "width": 300,
+        "height": 44
+      },
+      "relative_position": {
+        "below": "email_input",
+        "alignment": "left-aligned"
+      },
+      "style": {
+        "color": "#ffffff",
+        "background_color": "#2563eb",
+        "font_size": 16,
+        "font_weight": "600",
+        "border_radius": 6
+      },
+      "required": true,
+      "visibility": "visible"
+    }
+  ],
+  "layout": {
+    "container_alignment": "left-aligned",
+    "total_elements_expected": 3,
+    "viewport_width": 1280,
+    "viewport_height": 800
+  },
+  "metadata": {
+    "source": "extracted",
+    "timestamp": "2026-08-13T00:00:00.000Z",
+    "url": "https://example.com/login"
+  }
+}
