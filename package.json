@@ -1,0 +1,13 @@
+{
+  "name": "vibecheck-mockup",
+  "version": "1.0.0",
+  "description": "Mock extraction service for VibeCheck live demo",
+  "main": "server-mock.js",
+  "scripts": {
+    "start": "node server-mock.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
