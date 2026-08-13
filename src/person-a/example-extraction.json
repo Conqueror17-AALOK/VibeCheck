@@ -1,0 +1,61 @@
+{
+  "elements": [
+    {
+      "id": "hero_heading",
+      "type": "heading",
+      "text": "Welcome to VibeCheck",
+      "position": {
+        "x": 100,
+        "y": 50,
+        "width": 800,
+        "height": 60
+      },
+      "style": {
+        "color": "#111827",
+        "background_color": "transparent",
+        "font_size": 48,
+        "font_weight": "700",
+        "border_radius": 0,
+        "opacity": 1
+      },
+      "required": true,
+      "visibility": "visible"
+    },
+    {
+      "id": "cta_button",
+      "type": "button",
+      "text": "Get Started",
+      "position": {
+        "x": 100,
+        "y": 140,
+        "width": 160,
+        "height": 48
+      },
+      "relative_position": {
+        "below": "hero_heading",
+        "alignment": "left-aligned"
+      },
+      "style": {
+        "color": "#ffffff",
+        "background_color": "#2563eb",
+        "font_size": 16,
+        "font_weight": "600",
+        "border_radius": 8,
+        "opacity": 1
+      },
+      "required": true,
+      "visibility": "visible"
+    }
+  ],
+  "layout": {
+    "container_alignment": "left-aligned",
+    "total_elements_expected": 2,
+    "viewport_width": 1280,
+    "viewport_height": 720
+  },
+  "metadata": {
+    "source": "extracted",
+    "timestamp": "2026-08-13T05:30:00Z",
+    "url": "http://localhost:3001"
+  }
+}
