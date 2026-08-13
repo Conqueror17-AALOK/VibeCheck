@@ -1,0 +1,82 @@
+# Multi-stage Dockerfile for vibecheck-render-service
+FROM node:18-slim AS builder
+
+WORKDIR /app
+
+# Copy root package definitions & workspace package.json files
+COPY package.json package-lock.json ./
+COPY src/shared/package.json ./src/shared/
+COPY src/person-a/package.json ./src/person-a/
+COPY src/person-b/package.json ./src/person-b/
+COPY src/person-c/package.json ./src/person-c/
+
+# Install dependencies across all monorepo workspaces
+RUN npm ci
+
+# Copy full source tree & configuration files
+COPY . .
+
+# Build shared package
+RUN npm run build --workspace=src/shared
+
+# Production Runner stage
+FROM node:18-slim AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Install OS dependencies required by Playwright headless Chromium
+RUN apt-get update && apt-get install -y \
+    wget \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgbm1 \
+    libgcc1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    lsb-release \
+    xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src/person-a ./src/person-a
+COPY --from=builder /app/src/shared ./src/shared
+COPY --from=builder /app/schema.json ./schema.json
+COPY --from=builder /app/example-extraction.json ./example-extraction.json
+COPY --from=builder /app/schema-validation.js ./schema-validation.js
+
+EXPOSE 3000
+
+# Start Express render service in person-a workspace
+CMD ["npm", "run", "start", "--workspace=src/person-a"]
