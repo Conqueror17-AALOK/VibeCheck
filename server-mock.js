@@ -1,5 +1,5 @@
 "scripts": {
-  "start": "node index.js"
+  "start": "node server-mock.js"
 }
 
 const express = require('express');
